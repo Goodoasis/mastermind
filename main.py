@@ -41,7 +41,7 @@ class Main():
 
     def start(self):
         Main.welcom(Texts.texts["title"], self.txt.intro, self.txt.howto)
-        self.main_loop()
+        self.main_loop(self.game, self.points, self.txt.point, self.txt.stop)
         self.goodbye(self.txt.bye, Texts.texts["title"])
     
     @staticmethod
@@ -51,14 +51,14 @@ class Main():
         print(howto)
 
     @staticmethod
-    def main_loop(game:GameCli, points:int, txt_points:str):
+    def main_loop(game:GameCli, points:int, txt_point:str, txt_stop:str):
         stop = False
         while not stop:
             not_find = game.game_loop()
             if not not_find:
                 points += (game.max_round - game.round)
-            print(txt_points.format(points))
-            stop = Main._define_bool(txt_points)
+            print(txt_point.format(points))
+            stop = Main._define_bool(txt_stop)
     
     @staticmethod
     def goodbye(bye:str, title:str):

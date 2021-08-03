@@ -42,7 +42,7 @@ class GameCli():
         self.txt            = langage
         self.only_text      = only_text
 
-    def game_loop(self):
+    def game_loop(self) -> bool:
         self.new_game() 
         not_find = True
         while not_find and self.round < self.max_round:

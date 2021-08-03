@@ -2,10 +2,10 @@ from random import randint, sample
 
 class Computer():
     def __init__(self,
-                lenght: int = 4,
-                nb_colors: int = 7,
-                easy: bool = False,
-                repeat_color: bool = False):
+                    lenght:         int = 4,
+                    nb_colors:      int = 7,
+                    easy:           bool = False,
+                    repeat_color:   bool = False):
         """Class Computer, to Generate secret codes, with any length and any number of colors.
             Can compare proposals with secret code and give an answer.
             The answer in easy mode gives an answer in order for each pawn of the proposition.
@@ -14,14 +14,14 @@ class Computer():
         Args:
             lenght (int, optional): Length of the secret code to be discovered. Defaults to 4.
             nb_colors (int, optional): Select the color number of pawns. Defaults to 8.
-            difficulty (bool, optional): False to easy mode and True to normalmode. Defaults to True.
+            easy (bool, optional): False to easy mode and True to normalmode. Defaults to True.
             repeat_color (bool, optional): TTrue to allow the code to repeat a color. Defaults to False
         """
-        self.lenght = lenght
-        self.easy = easy
-        self.colors = range(nb_colors)
-        self.repeat_color = repeat_color
-        self.code = Computer.create_code(self.colors, lenght, repeat_color)
+        self.lenght         = lenght
+        self.easy           = easy
+        self.colors         = range(nb_colors)
+        self.repeat_color   = repeat_color
+        self.code           = Computer.create_code(self.colors, lenght, repeat_color)
     
     def answer(self, proposal: list):
         """Call the method corresponding to the chosen difficulty level.
@@ -39,11 +39,10 @@ class Computer():
         return answer
     
     def new_code(self):
-        self.code = Computer.create_code(self.colors, self.lenght)
-        return self.code
+        return Computer.create_code(self.colors, self.lenght)
     
     @staticmethod
-    def create_code(colors: list, lenght: int, repeat_color: bool = False) -> list[int, int]:
+    def create_code(colors: list, lenght: int, repeat_color: bool = False) -> list[int]:
         """Generate a random secret code. Heach pawn is defined by a number.
 
         Args:
@@ -102,20 +101,20 @@ class Computer():
         perfects = [i for i, p in enumerate(proposal) if p == code[i]]
         clean_code, clean_proposal = code[:], proposal[:]
         for i in perfects:
-            clean_proposal[i] = -2
-            clean_code[i] = -1
+            clean_proposal[i] = -2 # Set an invalide number
+            clean_code[i] = -1 # again
         matchs = [i for i, p in enumerate(clean_proposal) if p in clean_code]
         nb_blanks = self.lenght - (len(perfects) + len(matchs))
-        answer = {2:len(perfects), 1:len(matchs), 0: nb_blanks}
-        return answer
+        return {2:len(perfects), 1:len(matchs), 0: nb_blanks}
 
 
 if __name__ == '__main__':
-    lol = Computer(4, 7, 0)
+    test = Computer(4, 7, 0)
     for i in range(10):
-        proposal = Computer.create_code(lol.colors, lol.lenght)
+        proposal = Computer.create_code(test.colors, test.lenght)
         print("="*26, "\n")
-        print(f"Code secret = {lol.code}")
+        print(f"Secret Code = {test.code}")
         print(f"Proposal =    {proposal}")
         print("-"*14, "|", " "*10, "|", sep='')
-        print(f"Answer =      {lol.answer(proposal)}")
+        print(f"Answer =      {test.answer(proposal)}")
+

@@ -167,8 +167,8 @@ class Texts:
 
     def __init__(self, langage: str = "fr"):
         self.langage = langage
-        self.title = self.__class__.texts["title"]
-        self._text = self.__class__.texts[langage]
+        self.title   = self.__class__.texts["title"]
+        self._text   = self.__class__.texts[langage]
 
         for k, v in self._text.items():
             self.__setattr__(k, v)

@@ -14,26 +14,25 @@ CLUE_EMOJI = Texts.texts["emoji_clues"]
 
 
 class GameCli():
+    punc = punctuation.replace(",", '')
      
     def __init__(self,  
-                langage:     Texts,
-                easy:        bool      = False,
-                repeat:      bool      = False,
-                only_text:   bool      = False,
-                max_round:   int       = MAX_ROUND,
-                code_lenght: int       = CODE_LENGHT,
-                pawn_colors: list[str] = PAWN_COLORS,
-                pawn_letter: list[str] = PAWN_LETTER,
-                pawn_emoji:  list[str] = PAWN_EMOJI,
-                clue_colors: list[str] = CLUE_COLORS,
-                clue_emoji:  list[str] = CLUE_EMOJI):
+                    langage:     Texts,
+                    easy:        bool      = False,
+                    repeat:      bool      = False,
+                    only_text:   bool      = False,
+                    max_round:   int       = MAX_ROUND,
+                    code_lenght: int       = CODE_LENGHT,
+                    pawn_colors: list[str] = PAWN_COLORS,
+                    pawn_letter: list[str] = PAWN_LETTER,
+                    pawn_emoji:  list[str] = PAWN_EMOJI,
+                    clue_colors: list[str] = CLUE_COLORS,
+                    clue_emoji:  list[str] = CLUE_EMOJI):
 
-        self.easy           = easy
-        self.punctuation    = punctuation.replace(",", '')
-        self.round          = 0
-        self.max_round      = max_round
-        self.code_lenght    = code_lenght
         self.computer       = Computer(code_lenght, easy=easy, repeat_color=repeat)
+        self.easy           = easy
+        self.code_lenght    = code_lenght
+        self.max_round      = max_round
         self.pawn_colors    = pawn_colors
         self.pawn_letter    = pawn_letter
         self.pawn_emoji     = pawn_emoji
@@ -41,28 +40,29 @@ class GameCli():
         self.clue_emoji     = clue_emoji
         self.txt            = langage
         self.only_text      = only_text
+        self.round          = 0
 
     def game_loop(self) -> bool:
         self.new_game() 
         not_find = True
         while not_find and self.round < self.max_round:
             self.round += 1
-            # Proposition en tout lettre exemple: pink, yellow ,black, Green.
+            # Shouble be: 'pink yellow blue green' or 'p y b g'.
             proposal_msg = self.txt.proposal.format(self.round)
             proposal_correct = False
             while not proposal_correct:
-                brut_proposal = input(proposal_msg)
-                # get cleanned: ["p", "y", "b", "g"].
-                clean_proposal = self.clean_proposal(brut_proposal.lower())
-                # True if colors are writed correctly.
+                raw_proposal = input(proposal_msg)
+                # Get cleanned: ["p", "y", "b", "g"].
+                clean_proposal = GameCli.clean_proposal(raw_proposal.lower())
+                # True if proposal is writed correctly.
                 proposal_correct = self.verify_proposal(clean_proposal)
                 if not proposal_correct:
                     print(self.txt.bad_proposal)
             # Formated: [5, 3, 7, 2].
             formated_proposal = self.format_proposal(clean_proposal)
-            # Réponse brut: [1, 0, 2, 1] ou {0:1, 1:2, 2:1}.
-            brut_answer = self.get_api_answer(formated_proposal)
-            print("\n", self.repr(formated_proposal, brut_answer), '\n')
+            # Answer raw: [1, 0, 2, 1] ou {0:1, 1:2, 2:1}.
+            raw_answer = self.get_api_answer(formated_proposal)
+            print("\n", self.repr(formated_proposal, raw_answer), '\n')
             not_find = formated_proposal != self.computer.code  
         if not_find:
             print(self.txt.not_find)
@@ -78,11 +78,11 @@ class GameCli():
 
     def repr(self, proposal: list[int], answer: list[int] = []) -> str:
         visual_proposal = self._swap_proposal(proposal)
-        visuel_answer = self._swap_answer(answer)
+        visual_answer = self._swap_answer(answer)
         if not self.easy:
-            repr = f"\t{' '.join(visual_proposal)}  ░  {' '.join(visuel_answer)}"
+            repr = f"\t{' '.join(visual_proposal)}  ░  {' '.join(visual_answer)}"
         else:
-            repr = f"\t{' '.join(visual_proposal)}\n\t{' '.join(visuel_answer)}"
+            repr = f"\t{' '.join(visual_proposal)}\n\t{' '.join(visual_answer)}"
         return repr
 
     def _swap_proposal(self, proposal: list[int]) -> list[str]:
@@ -100,27 +100,29 @@ class GameCli():
                     swap_answer.append(source[k])
         return swap_answer
 
-    def clean_proposal(self, brut_proposal:str) -> list[str]:
-        brut_proposal = brut_proposal.replace(" ", ",")
-        for i in brut_proposal:
-            if i in self.punctuation:
-                brut_proposal = brut_proposal.replace(i, ",")
-        result = [word.strip() for word in brut_proposal.split(",") if word.strip()]
+    @staticmethod
+    def clean_proposal(raw_proposal:str) -> list[str]:
+        raw_proposal = raw_proposal.replace(" ", ",")
+        for i in raw_proposal:
+            if i in GameCli.punc:
+                raw_proposal = raw_proposal.replace(i, ",")
+        result = [word.strip() for word in raw_proposal.split(",") if word.strip()]
         return result
     
     def format_proposal(self, proposal: list[str]) -> list[int]:
         return [self.pawn_colors.index(i) if len(i)>1 else self.pawn_letter.index(i) for i in proposal]
 
     def get_api_answer(self, proposal:list) -> list:
-        answer_brut = self.computer.answer(proposal)
-        return answer_brut
+        answer_raw = self.computer.answer(proposal)
+        return answer_raw
     
-    def format_answer(self, answer_brut) -> list:
-        if isinstance(answer_brut, dict):
-            answer_brut = self._anwserdict_tolist(answer_brut)
-        return [self.clue_colors[i] for i in answer_brut]
+    def format_answer(self, answer_raw) -> list:
+        if isinstance(answer_raw, dict):
+            answer_raw = GameCli._anwserdict_tolist(answer_raw)
+        return [self.clue_colors[i] for i in answer_raw]
 
-    def _anwserdict_tolist(self, answerdict:dict) -> list:
+    @staticmethod
+    def _anwserdict_tolist(answerdict:dict) -> list:
         answer = []
         for k, v in answerdict.items():
             for _ in range(v):
@@ -135,7 +137,7 @@ class GameCli():
 
 
 if __name__ == "__main__":
-    lang = Texts("fr")
-    APP = GameCli(easy=False, langage=lang)
-    APP.game_loop()
+    txt = Texts("fr")
+    TEST = GameCli(easy=True, langage=txt)
+    TEST.game_loop()
 

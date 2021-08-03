@@ -1,119 +1,111 @@
-from langage import Langage
+from texts import Texts
 from api import Computer
 from string import punctuation
 
 
-SEP = ','
 MAX_ROUND = 12
 CODE_LENGHT = 4
 
-PAWN_COLORS = ["blue", "red", "green", "yellow", "orange", "pink", "white", "black"]
-PAWN_LETTER = ["b", "r", "g", "y", "o", "p", "w", "d"]
-PAWN_EMOJI = ["🔵", "🔴", "🟢", "🟡", "🟠", "🟣", "⚪", "⚫"]
+PAWN_COLORS = ["blue", "green", "yellow", "orange", "red", "pink", "white", "black"]
+PAWN_LETTER = ["b", "g", "y", "o", "r", "p", "w", "d"]
+PAWN_EMOJI = Texts.texts["emoji_colors"]
 CLUE_COLORS = ["blank", "white", "black"]
-CLUE_EMOJI = [" ▫️", "⬜", "⬛"]
+CLUE_EMOJI = Texts.texts["emoji_clues"]
 
 
 class GameCli():
      
     def __init__(self,  
-                langage:     Langage,
-                easy_off:    bool =      True,
-                only_text:   bool =      False,
-                max_round:   int =       MAX_ROUND,
-                code_lenght: int =       CODE_LENGHT,
+                langage:     Texts,
+                easy:        bool      = False,
+                repeat:      bool      = False,
+                only_text:   bool      = False,
+                max_round:   int       = MAX_ROUND,
+                code_lenght: int       = CODE_LENGHT,
                 pawn_colors: list[str] = PAWN_COLORS,
                 pawn_letter: list[str] = PAWN_LETTER,
                 pawn_emoji:  list[str] = PAWN_EMOJI,
                 clue_colors: list[str] = CLUE_COLORS,
-                clue_emoji:  list[str] = CLUE_EMOJI,
-                sep:         str =       SEP
-                ):
-        self.easy_off =     easy_off
-        self.sep =          sep
-        self.punctuation =  punctuation.replace(self.sep, '')
-        self.round =        0
-        self.max_round =    max_round
-        self.code_lenght =  code_lenght
-        self.computer =     Computer(code_lenght, difficulty=easy_off)
-        self.pawn_colors =  pawn_colors
-        self.pawn_letter =  pawn_letter
-        self.pawn_emoji =   pawn_emoji
-        self.clue_colors =  clue_colors
-        self.clue_emoji =   clue_emoji
-        self.lang =         langage
-        self.only_text =    False
+                clue_emoji:  list[str] = CLUE_EMOJI):
 
-    def main_loop(self):
+        self.easy           = easy
+        self.punctuation    = punctuation.replace(",", '')
+        self.round          = 0
+        self.max_round      = max_round
+        self.code_lenght    = code_lenght
+        self.computer       = Computer(code_lenght, easy=easy, repeat_color=repeat)
+        self.pawn_colors    = pawn_colors
+        self.pawn_letter    = pawn_letter
+        self.pawn_emoji     = pawn_emoji
+        self.clue_colors    = clue_colors
+        self.clue_emoji     = clue_emoji
+        self.txt            = langage
+        self.only_text      = only_text
+
+    def game_loop(self):
         self.new_game() 
         not_find = True
         while not_find and self.round < self.max_round:
             self.round += 1
             # Proposition en tout lettre exemple: pink, yellow ,black, Green.
-            proposal_msg = self.lang.proposal.format(self.round)
+            proposal_msg = self.txt.proposal.format(self.round)
             proposal_correct = False
             while not proposal_correct:
                 brut_proposal = input(proposal_msg)
-                # cleanned: ["pink", "yellow", "black", "green"].
+                # get cleanned: ["p", "y", "b", "g"].
                 clean_proposal = self.clean_proposal(brut_proposal.lower())
                 # True if colors are writed correctly.
                 proposal_correct = self.verify_proposal(clean_proposal)
                 if not proposal_correct:
-                    print(self.lang.bad_proposal)
+                    print(self.txt.bad_proposal)
             # Formated: [5, 3, 7, 2].
             formated_proposal = self.format_proposal(clean_proposal)
             # Réponse brut: [1, 0, 2, 1] ou {0:1, 1:2, 2:1}.
             brut_answer = self.get_api_answer(formated_proposal)
-            # Formated Réponse = 'white  blanck  black  white' ou 'black  white  white  blanck'.
-            # formated_answer = self.format_answer(brut_answer)
-            emoji_repr = self.emoji_repr(formated_proposal, brut_answer)
-            print("\n", emoji_repr, '\n')
-            #print(f"Answer: {' '.join(formated_answer)}\n\n")
-            if formated_proposal == self.computer.code: # Si code proposé == code secret.
-                not_find = False
-                
+            print("\n", self.repr(formated_proposal, brut_answer), '\n')
+            not_find = formated_proposal != self.computer.code  
         if not_find:
-            print(self.lang.not_find)
-            print(self.emoji_repr(self.computer.code).strip(' ░',))
+            print(self.txt.not_find)
+            print(self.repr(self.computer.code).strip(' ░',))
         else:
-            print(self.lang.find.format(self.round))
+            print(self.txt.find.format(self.round))
+        return not_find
     
     def verify_proposal(self, proposal: list[int]) -> bool:
         pawns = self.pawn_colors + self.pawn_letter
         if len(proposal) == self.code_lenght:
-            return all([(i in pawns) for i in proposal]) 
-        else:
-            return False
+            return all([(i in pawns) for i in proposal])
 
-    def emoji_repr(self, proposal: list[str], answer: list[str] = []) -> str:
-        emoji_proposal = self._swap_emoji_proposal(proposal)
-        emoji_answer = self._swap_emoji_answer(answer)
-        if self.easy_off:
-            emoji_repr = f"\t{' '.join(emoji_proposal)}  ░  {' '.join(emoji_answer)}"
+    def repr(self, proposal: list[int], answer: list[int] = []) -> str:
+        visual_proposal = self._swap_proposal(proposal)
+        visuel_answer = self._swap_answer(answer)
+        if not self.easy:
+            repr = f"\t{' '.join(visual_proposal)}  ░  {' '.join(visuel_answer)}"
         else:
-            emoji_repr = f"\t{' '.join(emoji_proposal)}\n\t{' '.join(emoji_answer)}"
-        return emoji_repr
+            repr = f"\t{' '.join(visual_proposal)}\n\t{' '.join(visuel_answer)}"
+        return repr
 
-    
-    def _swap_emoji_proposal(self, proposal: list[str]) -> list[str]:
-        return [self.pawn_emoji[i] for i in proposal]
-    
-    def _swap_emoji_answer(self, answer: list[str]) -> list[str]:
+    def _swap_proposal(self, proposal: list[int]) -> list[str]:
+        source = self.pawn_emoji if not self.only_text else self.txt.colors
+        return [source[i] for i in proposal]
+
+    def _swap_answer(self, answer: list[int]) -> list[str]:
+        source = self.clue_emoji if not self.only_text else self.txt.clues
         if isinstance(answer, list):
-            emoji_answer = [self.clue_emoji[i] for i in answer]
+            swap_answer = [source[i] for i in answer]
         else:
-            emoji_answer = []
+            swap_answer = []
             for k, v in answer.items():
                 for _ in range(v):
-                    emoji_answer.append(self.clue_emoji[k])
-        return emoji_answer
-    
+                    swap_answer.append(source[k])
+        return swap_answer
+
     def clean_proposal(self, brut_proposal:str) -> list[str]:
-        brut_proposal = brut_proposal.replace(" ", self.sep)
+        brut_proposal = brut_proposal.replace(" ", ",")
         for i in brut_proposal:
             if i in self.punctuation:
-                brut_proposal = brut_proposal.replace(i, self.sep)
-        result = [word.strip() for word in brut_proposal.split(self.sep) if word.strip()]
+                brut_proposal = brut_proposal.replace(i, ",")
+        result = [word.strip() for word in brut_proposal.split(",") if word.strip()]
         return result
     
     def format_proposal(self, proposal: list[str]) -> list[int]:
@@ -138,26 +130,12 @@ class GameCli():
     def new_game(self) -> list[int]:
         secret_code = self.computer.new_code()
         self.round = 0
+        print(self.txt.ready.format(self.max_round))
         return secret_code
 
-if __name__ == "__main__":
-    lang = Langage("fr")
-    APP = GameCli(easy_off=True, langage=lang)
-    APP.main_loop()
 
-# test for inputs fragilities
-# proposals = ["blue,blue,blue,blue",
-#             "blue blue blue blue",
-#             "blue ,blue ,blue, blue",
-#             "blue blue blue blue",
-#             "?blue blue blue blue!",
-#             " blue,blue blue;:, blue",
-#             " ,  ,,,   ,,;,,,,,, blue,,  blue; ,blue ,,,blue:  ,!"     
-#             ]
-# good = ["blue","blue","blue","blue"]
-# for i in proposals:
-#     o = APP.clean_proposal(i)
-#     if o == good:
-#         print(f"YEAH! result = {o}")
-#     else:
-#         print(f"OOps! result = {o}")
+if __name__ == "__main__":
+    lang = Texts("fr")
+    APP = GameCli(easy=False, langage=lang)
+    APP.game_loop()
+

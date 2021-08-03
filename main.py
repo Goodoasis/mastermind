@@ -1,100 +1,86 @@
+from texts import Texts
 from game_cli import GameCli, CODE_LENGHT, MAX_ROUND
-from langage import Langage
+
 
 class main():
 
     def __init__(self):
+        self.points = 0
         langage_chosen = self.langage_choice()
-        self.lang = Langage(langage_chosen)
+        self.txt = Texts(langage_chosen)
+        easy, lenght, round, repeat, emoji = self.custom()
+        self.game = GameCli(self.txt, only_text=emoji, easy=easy, code_lenght=lenght, max_round=round, repeat=repeat)
+        
         self.welcom()
-        diff, lenght, round, emoji = self.custom()
-        self.game = GameCli(self.lang, only_text=emoji, easy_off=diff, code_lenght=lenght, max_round=round)
-        print(self.lang.howto)
-        self.game.main_loop()
-    
-    def customize(self) -> bool:
-        chosen = False
-        while not chosen:
-            choice = input()
-            choice = choice[:].lower().strip()
-            if choice in ("", "non", "n", "oui", "o"):
-                chosen = True
-        return False if choice in ("", "non", "n") else True
+        self.main_loop()
+        self.goodbye()
 
-    def custom(self):
-        print(self.lang.custom)
-        customize = self.customize()
-        diff_chosen   = True
-        emoji_choosen = bool()
+    def main_loop(self):
+        stop = False
+        while not stop:
+            not_find = self.game.game_loop()
+            if not not_find:
+                self.points += (self.game.max_round - self.game.round)
+            print(self.txt.point.format(self.points))
+            stop = self.define_bool(self.txt.stop)
+    
+    def goodbye(self):
+        print(self.txt.bye)
+        print(Texts.texts["title"])
+
+    def custom(self) -> tuple:
+        customize = self.define_bool(self.txt.custom)
+        easy_chosen  = bool()
+        repeat_chosen = bool()
+        emoji_chosen = bool()
         lenght_chosen = CODE_LENGHT
         round_chosen  = MAX_ROUND
         if customize:
-            diff_chosen = self.diff_choice()
-            lenght_chosen = self.define_number(self.lang.lenght, CODE_LENGHT)
-            round_chosen = self.define_number(self.lang.round, MAX_ROUND)
-            emoji_chosen = self.choice_emoji()
-        return diff_chosen, lenght_chosen, round_chosen, emoji_chosen
+            easy_chosen = self.define_bool(self.txt.easy)
+            lenght_chosen = self.define_number(self.txt.lenght, CODE_LENGHT)
+            repeat_chosen = self.define_bool(self.txt.repeat)
+            round_chosen = self.define_number(self.txt.round, MAX_ROUND)
+            emoji_chosen = self.define_bool(self.txt.emoji)
+        return easy_chosen, lenght_chosen, round_chosen, repeat_chosen, emoji_chosen
 
-    def define_number(self,text, default_data):
+    def define_number(self,text, default_data) -> int:
         message = text.format(default_data)
         chosen = False
         while not chosen:
             choice = input(message)
-            if choice == "":
-                break
-            try:
-                if (default_data/2) <= int(choice) <= (default_data*2):
-                    chosen = True
-            except ValueError:
-                print(self.lang.value_error)
-        return int(choice)
-
-    def diff_choice(self) -> bool:
-        chosen = False
-        while not chosen:
-            print(self.lang.diff)
-            choice = input()
-            choice = choice[:].lower().strip()
-            if choice in ("", "n", "no", "non", "y", "yes", "o", "oui"):
+            if choice:
+                try:
+                    if (default_data/2) <= int(choice) <= (default_data*2):
+                        chosen = True
+                except ValueError:
+                    print(self.txt.value_error)
+            else:
                 chosen = True
-        if choice in ("", "n", "no", "non"):
-            choice = True
-        else:
-            choice = False
-        return choice
+                choice = bool(choice)
+        return int(choice) or default_data
     
-
-    def choice_emoji(self) -> bool:
+    def define_bool(self, text) -> bool:
         chosen = False
         while not chosen:
-            print(self.lang.emoji)
-            choice = input()
+            choice = input(text)
             choice = choice[:].lower().strip()
             if choice in ("", "n", "no", "non", "y", "yes", "o", "oui"):
                 chosen = True
-        if choice in ("", "n", "no", "non"):
-            choice = True
-        else:
-            choice = False
-        return choice
+        return choice in ("o", "y", "oui", "yes")
         
     def welcom(self):
-        print(Langage.texts["title"])
-        print(self.lang.welcom)
-        print(self.lang.intro)
+        print(Texts.texts["title"])
+        print(self.txt.intro)
+        print(self.txt.howto)
 
     def langage_choice(self) -> str:
         chosen = False
         while not chosen:
-            print(Langage.texts["choose"])
+            print(Texts.texts["choose"])
             choice = input()
             choice = choice[:].lower().strip()
             if choice in ("", "1", "2", "en", "fr", "english", "français"):
                 chosen = True
-        if choice in ("", "1", "fr", "français"):
-            choice = "fr"
-        else:
-            choice = "en"
-        return choice
+        return "fr" if choice in ("", "1", "fr", "français") else "en"
         
 APP = main()

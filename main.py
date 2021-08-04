@@ -15,13 +15,10 @@ class Main():
     
     @staticmethod
     def langage_choice() -> str:
-        chosen = False
-        while not chosen:
+        choice = None
+        while not choice in ("", "1", "2", "e", "f", "en", "fr", "english", "français"):
             print(Texts.texts["choose"])
-            choice = input()
-            choice = choice[:].lower().strip()
-            if choice in ("", "1", "2", "e", "f", "en", "fr", "english", "français"):
-                chosen = True
+            choice = input().lower().strip()
         return "fr" if choice in ("", "1", "f", "fr", "français") else "en"
 
     def custom(self) -> tuple[int, bool]:
@@ -70,7 +67,7 @@ class Main():
         message = text.format(default_data)
         chosen = False
         while not chosen:
-            choice = input(message)
+            choice = input(message).lower().strip()
             if choice:
                 try:
                     if (default_data/2) <= int(choice) <= (default_data*2):
@@ -84,12 +81,9 @@ class Main():
     
     @staticmethod
     def _define_bool(text) -> bool:
-        chosen = False
-        while not chosen:
-            choice = input(text)
-            choice = choice[:].lower().strip()
-            if choice in Main.valid_input:
-                chosen = True
+        choice = None
+        while not choice in Main.valid_input:
+            choice = input(text).lower().strip()
         return choice in Main.say_yes
 
         

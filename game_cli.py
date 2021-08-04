@@ -6,10 +6,11 @@ from string import punctuation
 MAX_ROUND = 12
 CODE_LENGHT = 4
 
-PAWN_COLORS = ["blue", "green", "yellow", "orange", "red", "pink", "white", "black"]
-PAWN_LETTER = ["b", "g", "y", "o", "r", "p", "w", "d"]
+PAWN_COLORS = Texts.texts["en"]["colors"]
 PAWN_EMOJI = Texts.texts["emoji_colors"]
-CLUE_COLORS = ["blank", "white", "black"]
+PAWN_LETTER = Texts.texts["colors_letter"]
+
+CLUE_COLORS = Texts.texts["en"]["clues"]
 CLUE_EMOJI = Texts.texts["emoji_clues"]
 
 

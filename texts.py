@@ -9,6 +9,7 @@ class Texts:
                     \n\t1: Français\
                     \n\t2: English\
                     \n(1/2)?",
+        "colors_letter": ["b", "g", "y", "o", "r", "p", "w", "d"],
         "emoji_colors": ["🔵", "🟢", "🟡", "🟠", "🔴", "🟣", "⚪", "⚫"],
         "emoji_clues": [" ▫️", "⬜", "⬛"],
         "en" : {
